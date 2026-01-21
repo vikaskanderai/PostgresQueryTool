@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: pg_logger_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: testdb
+      # Pre-configure logging
+      POSTGRES_INITDB_ARGS: "-c logging_collector=on -c log_directory=/var/lib/postgresql/data/log -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    ports:
+      - "5433:5432"
+    command:
+      - "postgres"
+      - "-c"
+      - "logging_collector=on"
+      - "-c"
+      - "log_directory=log"
+      - "-c"
+      - "log_filename=postgresql-%Y-%m-%d_%H%M%S.log"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pg_logger_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:test123@postgres:5432/testdb
+      - PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.web
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
