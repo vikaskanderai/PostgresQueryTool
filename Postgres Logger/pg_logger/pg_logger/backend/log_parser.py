@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 
 # Regex Patterns
 STATEMENT_PATTERN = re.compile(
-    r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}) \[(\d+)\] (\w+)@(\w+) (.*)$'
+    r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})(?: [A-Z]+)? \[(\d+)\] (\w+)@(\w+) (.*)$'
 )
 
 DURATION_PATTERN = re.compile(

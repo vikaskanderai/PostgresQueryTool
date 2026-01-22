@@ -2,6 +2,7 @@
 Main application state management.
 Handles all shared state and background async tasks.
 """
+from pickle import TRUE
 import reflex as rx
 import asyncio
 from typing import List, Dict, Optional, Any
@@ -429,7 +430,6 @@ class AppState(rx.State):
         db_config = self._db_config
         
         if not db_config:
-            # print("DEBUG: db_config is None, returning early", flush=True)
             async with self:
                 self.connection_error = "Session expired. Please reconnect."
                 self.is_authenticated = False
@@ -527,12 +527,23 @@ class AppState(rx.State):
                 # Read new log content
                 content = await log_engine.read_new_logs()
                 
+
                 if content:
                     # Parse log lines
+
+
+                    print("content1233", content, flush=True)
+
                     new_entries = parser.parse_log_lines(content)
                     
+                    print("Entries", new_entries, flush=True)
+
+
                     if new_entries:
                         async with self:
+
+                            # print("New entries:", new_entries, flush=True)
+
                             # Append new queries
                             self.query_log.extend(new_entries)
                             

@@ -112,9 +112,7 @@ class LogEngine:
             New log content as string (empty if no new content)
         """
 
-        print("Reading new logs...", flush=True)
-        print("Current file:", self.current_file, flush=True)
-        
+
 
         if not self.current_file:
             return ""
@@ -149,7 +147,7 @@ class LogEngine:
                 
                 # Update offset for next read
                 self.current_offset += bytes_to_read
-                
+
                 return content if content else ""
                 
         except Exception as e:
