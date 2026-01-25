@@ -57,6 +57,10 @@ class AppState(rx.State):
     search_text: str = ""
     min_duration: float = 0.0
     
+    def set_search_text(self, value: str) -> None:
+        """Set search text filter."""
+        self.search_text = value
+
     def set_min_duration(self, value: str) -> None:
         """Set minimum duration filter from string input."""
         try:
@@ -157,7 +161,7 @@ class AppState(rx.State):
             self.scan_progress = "Detecting local subnet..."
         
         # Create discovery engine with Semaphore(20)
-        discovery_engine = DiscoveryEngine(max_concurrent=20)
+        discovery_engine = DiscoveryEngine(max_concurrent=20, timeout=1.0)
         
         # Get local subnet
         base_ip = discovery_engine.get_local_subnet()

@@ -1,0 +1,13 @@
+/* Move the disconnected indicator/icon up to avoid overlap with the "Built with Reflex" badge */
+
+.rx-badge {
+    bottom: 50px !important;
+}
+
+div[id^="reflex-connection-error"] {
+    bottom: 60px !important;
+}
+
+body {
+    padding-bottom: 20px;
+}
