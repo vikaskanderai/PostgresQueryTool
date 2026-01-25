@@ -531,18 +531,10 @@ class AppState(rx.State):
                 if content:
                     # Parse log lines
 
-
-                    print("content1233", content, flush=True)
-
                     new_entries = parser.parse_log_lines(content)
-                    
-                    print("Entries", new_entries, flush=True)
-
 
                     if new_entries:
                         async with self:
-
-                            # print("New entries:", new_entries, flush=True)
 
                             # Append new queries
                             self.query_log.extend(new_entries)
