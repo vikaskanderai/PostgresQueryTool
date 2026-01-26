@@ -398,7 +398,7 @@ def activity_feed() -> rx.Component:
             spacing=SPACING["md"],
         ),
         padding=SPACING["lg"],
-        background=COLORS["surface"],
+        background=COLORS["surface_dark"],
         border_radius="0.5rem",
         border=f"1px solid {COLORS['border']}",
         width="100%",

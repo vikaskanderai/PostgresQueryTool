@@ -9,6 +9,7 @@ from typing import List, Dict, Optional, Any
 from .backend.discovery import DiscoveryEngine
 from .backend.history_mgr import HistoryManager
 from .backend.config_mgr import ConfigManager
+from .backend.script_engine import ScriptEngine
 
 # Global registry for backend connection managers
 # keyed by client_token to prevent Reflex serialization issues
@@ -43,6 +44,18 @@ class AppState(rx.State):
     # Database connection (stored in global SESSION_CONFIGS)
     # _db_config property handles access to backend-only state
     backend_pid: int = 0
+    
+    # Phase 2: Script Generator State
+    selected_feature: Optional[str] = None  # 'monitor' or 'generator'
+    db_objects: Dict[str, List[str]] = {"tables": [], "views": [], "functions": []}
+    selected_objects: List[str] = []
+    generated_script: str = ""
+    engine_initialized: bool = False
+    is_generating: bool = False
+    
+    @rx.var
+    def selected_count(self) -> int:
+        return len(self.selected_objects)
     
     # Streaming state (Phase 3)
     is_streaming: bool = False
@@ -307,12 +320,22 @@ class AppState(rx.State):
                 self.selected_username
             )
             
+            # Check initialization status for script engine
+            engine_ready = await ScriptEngine.check_engine_initialized(config_mgr.pool)
+            
+            # Fetch database objects for the generator
+            objects = await ScriptEngine.get_database_objects(config_mgr.pool)
+            
             async with self:
                 self.is_authenticated = True
                 self.set_db_config(config_mgr)
                 self.backend_pid = pid
                 self.is_connecting = False
                 self.password_input = ""  # Clear password from state
+                self.engine_initialized = engine_ready
+                self.db_objects = objects
+                self.selected_feature = None # Reset feature selection
+                
                 
         except PermissionError as e:
             async with self:
@@ -398,6 +421,7 @@ class AppState(rx.State):
             self.set_db_config(None)
         
         self.is_authenticated = False
+        self.selected_feature = None
         self.selected_host = ""
         self.selected_port = 5432
         self.selected_database = ""
@@ -565,3 +589,62 @@ class AppState(rx.State):
             
             # Wait 700ms before next poll
             await asyncio.sleep(0.7)
+
+    # ========== Phase 2: Script Generator Methods ==========
+
+    def select_feature(self, feature: str) -> None:
+        """Set the active feature view."""
+        self.selected_feature = feature
+
+    def toggle_object(self, name: str, checked: bool) -> None:
+        """Toggle selection of a database object."""
+        if checked:
+            if name not in self.selected_objects:
+                self.selected_objects.append(name)
+        else:
+            if name in self.selected_objects:
+                self.selected_objects.remove(name)
+
+    @rx.event(background=True)
+    async def initialize_script_engine(self) -> None:
+        """Inject the PL/pgSQL function into the DB."""
+        if not self._db_config:
+            return
+            
+        async with self:
+            self.is_generating = True
+            
+        try:
+            await ScriptEngine.initialize_engine(self._db_config.pool)
+            async with self:
+                self.engine_initialized = True
+                self.is_generating = False
+        except Exception as e:
+            async with self:
+                self.is_generating = False
+                # TODO: Handle error reporting properly
+                print(f"Engine init failed: {e}")
+
+    @rx.event(background=True)
+    async def run_script_generation(self) -> None:
+        """Generate the deployment script."""
+        if not self._db_config:
+            return
+            
+        async with self:
+            self.is_generating = True
+            self.generated_script = "Generating..."
+            
+        try:
+            script = await ScriptEngine.generate_script(
+                self._db_config.pool, 
+                self.selected_objects
+            )
+            async with self:
+                self.generated_script = script
+                self.is_generating = False
+        except Exception as e:
+            async with self:
+                self.generated_script = f"-- Error generating script: {e}"
+                self.is_generating = False
+

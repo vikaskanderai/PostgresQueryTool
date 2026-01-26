@@ -6,6 +6,8 @@ from .state import AppState
 from .frontend.styles import COLORS, SPACING, INPUT_STYLE, BUTTON_STYLE
 from .frontend.overlays import restart_warning_overlay
 from .frontend.components import control_bar, activity_feed
+from .frontend.selector import feature_selector
+from .frontend.script_ui import script_generator_ui
 
 
 def index() -> rx.Component:
@@ -323,8 +325,12 @@ def dashboard_page() -> rx.Component:
             rx.hstack(
                 rx.vstack(
                     rx.heading(
-                        "Postgres Query Scanner",
-                        size="9",
+                        rx.cond(
+                            AppState.selected_feature == "generator",
+                            "Postgres Script Generator",
+                            "Postgres Query Scanner"
+                        ),
+                        size="8",
                         color=COLORS["text_primary"],
                     ),
                     rx.text(
@@ -335,29 +341,49 @@ def dashboard_page() -> rx.Component:
                     align_items="start",
                     spacing=SPACING["xs"],
                 ),
-                rx.button(
-                    "Logout",
-                    on_click=AppState.reset_connection,
-                    background=COLORS["danger"],
-                    color=COLORS["text_primary"],
-                    padding_x=SPACING['md'],
-                    padding_y=SPACING['sm'],
-                    border_radius="0.5rem",
+                rx.hstack(
+                    rx.cond(
+                         AppState.selected_feature != None,
+                         rx.button(
+                            "Switch Tool",
+                            on_click=lambda: AppState.select_feature(None), # Go back to selector
+                            variant="outline",
+                        ),
+                    ),
+                    rx.button(
+                        "Logout",
+                        on_click=AppState.reset_connection,
+                        background=COLORS["danger"],
+                        color=COLORS["text_primary"],
+                        padding_x=SPACING['md'],
+                        padding_y=SPACING['sm'],
+                        border_radius="0.5rem",
+                    ),
+                    spacing="4",
                 ),
                 justify="between",
                 width="100%",
                 align_items="center",
             ),
             
-            # Control Bar
-            control_bar(),
-            
-            # Activity Feed (Phase 4)
-            activity_feed(),
+            # Content Area based on Selection
+            rx.cond(
+                AppState.selected_feature == "monitor",
+                rx.box(
+                    control_bar(),
+                    activity_feed(),
+                    width="100%",
+                ),
+                rx.cond(
+                    AppState.selected_feature == "generator",
+                    script_generator_ui(),
+                    feature_selector(), # Default: Show Selector if nothing selected
+                ),
+            ),
             
             spacing=SPACING["lg"],
             width="100%",
-            max_width="1200px",
+            max_width="1400px",  # Increased width for generator
             padding=SPACING["xl"],
         ),
         width="100%",

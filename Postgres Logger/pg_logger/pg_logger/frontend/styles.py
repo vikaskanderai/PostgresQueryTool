@@ -20,6 +20,8 @@ COLORS = {
     
     # UI Elements
     "surface": "#1E293B",           # Cards/Input backgrounds
+    "surface_dark": "#1F2937",      # Dark Grey - Activity Feed
+    "surface_hover": "#334155",     # Hover state for rows
     "surface_hover": "#334155",     # Hover state for rows
     "border": "#334155",            # Borders
     "border_focus": "#3B82F6",      # Input focus border
