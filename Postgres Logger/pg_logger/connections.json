@@ -3,13 +3,13 @@
     {
       "host": "postgres",
       "port": 5432,
-      "database": "testdb_new",
+      "database": "testdb",
       "username": "postgres"
     },
     {
       "host": "postgres",
       "port": 5432,
-      "database": "testdb",
+      "database": "testdb_new",
       "username": "postgres"
     },
     {
