@@ -99,15 +99,21 @@ def script_preview() -> rx.Component:
                 AppState.generated_script,
                 language="sql",
                 show_line_numbers=True,
-                theme="dracula",
+                theme="github",
                 wrap_long_lines=True,  # This helps with horizontal overflow
+                # custom_style={
+                #     "backgroundColor": "#00FF00",  # Force Background to Dark Blue/Grey
+                #     "color": "#000000",            # Force Text to White/Off-White
+                #     "padding": "20px",             # Add space inside the box
+                #     "fontSize": "0.9em"            # Make text readable
+                # },
             ),
             width="100%",
             height="60vh",
             overflow_y="auto",
             overflow_x="auto",
             background="#282a36",
-            border_radius="md",
+            border_radius="xs",
             padding="4",
         ),
         width="100%",
